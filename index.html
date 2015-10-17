@@ -1,1 +1,766 @@
-Hello World
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="canvas" width="0" height="0" style="background-color:#000000">
+Your browser does not support html5 canvasses.
+</canvas>
+
+<script>
+var canvas = new canvas_data();
+var mouseover_objects = [];
+var mouseover_obj;
+var school_exteriors = [];
+var background = new Image();
+background.src = "images/RCSD map.png";
+
+init(canvas, mouseover_objects);
+
+function init() {
+	// Set canvas size
+	canvas.update_size(1770, 1066.5);
+
+	// Add mouseover listener
+	canvas.canvas.addEventListener('mousemove', function(event) {
+		var x = event.pageX - canvas.l;
+		var y = event.pageY - canvas.t;
+	
+		var mouseover_execution = function(element) {
+			if (y > element.t && 
+				y < element.b &&
+				x > element.l &&
+				x < element.r) {
+				if ((typeof element.on_mouseover === "function") && (element.active === true)) {
+					if (mouseover_obj != element) {
+						mouseover_obj = element;		
+						mouseover_obj.on_mouseover();
+					}
+				}
+			}
+			else if (element == mouseover_obj) {
+				mouseover_obj.on_mouseleave();
+				mouseover_obj = null;
+			}
+		}
+
+		mouseover_objects.forEach(mouseover_execution);
+		school_exteriors.forEach(function(element) {
+			mouseover_execution(element);
+			element.interiors.forEach(mouseover_execution);	
+		});
+	}, false);
+
+	// Add click listener
+	canvas.canvas.addEventListener('click', function(event) {
+		var x = event.pageX - canvas.l;
+		var y = event.pageY - canvas.t;
+		var clicked = [];
+	
+		console.log("X " + x);
+console.log("Y " + y);	
+		
+		var click_execution = function(element) {
+		console.log("click execution ran");
+			if (y > element.t && 
+				y < element.b &&
+				x > element.l &&
+				x < element.r) {
+				if ((typeof element.on_click === "function") && (element.active === true)) {
+					clicked.push(element);	
+					console.log(clicked);
+					//element.on_click();
+				}
+			}
+		}
+
+		mouseover_objects.forEach(click_execution);
+		school_exteriors.forEach(click_execution);
+		school_exteriors.forEach(function(element) {
+			element.interiors.forEach(click_execution);
+		});
+		clicked.forEach(function(element) {
+			element.on_click();
+		});
+	}, false);
+
+	// Create school objects
+	create_school_objs();
+}
+
+function create_school_objs() {
+	var aspect_ratio;
+	// Brentwood
+	// Mouseover obj
+	var brentwood_mouseover = new mouseover_object("Brentwood",
+												   'blue',
+												   true,
+												   (canvas.w/15)*1.1,
+												   (canvas.h/15)*1.1,
+												   ((canvas.l + canvas.w)/1.62)-((canvas.w/15)*0.05),
+												   (canvas.t + canvas.h)/1.312-((canvas.h/15)*0.05),
+												   function() {
+												   		console.log("Mouse over " + this.name);
+														this.color = 'green';
+														draw();
+												   },
+												   function() {
+												   		console.log("Mouse left " + this.name);
+														this.color = 'blue';
+														draw();
+												   },
+												   null);
+	mouseover_objects.push(brentwood_mouseover);	
+	// Image	
+	var brentwood_image = new Image();
+	brentwood_image.src = "images/brentwood.png";
+	brentwood_image.onload = function() {
+		var brentwood_ext = new school_exterior("Brentwood", 
+													 this,
+													 true, 
+													 canvas.w/15,
+												 	 canvas.h/15, 
+													 (canvas.l + canvas.w)/1.62,
+													 (canvas.t + canvas.h)/1.312,
+													 null,
+													 null,
+													 function() {
+													 	console.log("Clicked " + this.name);
+														deactivate_objs();
+														activate_interior(this, 0);
+														draw();
+													 });
+		// Add interior image objs
+		for (var i=1; i<4; i++) {
+			var brentwood_int_img = new Image();
+			brentwood_int_img.src = "images/brentwood" + i + ".png";
+			aspect_ratio = Math.min((canvas.w / brentwood_int_img.width), (canvas.h / brentwood_int_img.height));
+			brentwood_ext.interiors.push(new school_interior("Brentwood Interior " + i,
+																   i-1,
+																   brentwood_ext,
+																   brentwood_int_img,
+																   false,
+																   brentwood_int_img.width * aspect_ratio,
+																   brentwood_int_img.height * aspect_ratio,
+																   ((canvas.l + canvas.w)/2) - ((brentwood_int_img.width * aspect_ratio)/2),
+																   0,
+																   null,
+																   null,
+																   function() {
+																   		deactivate_objs();
+																		activate_interior(this.parent, (this.index + 1));
+																		draw();
+																   }));
+		}
+		
+		add_element_to_school_ext_objects(brentwood_ext);
+	}
+
+	// Belle Haven 
+	// Mouseover obj
+	var bellehaven_mouseover = new mouseover_object("Belle Haven",
+												   'blue',
+												   true,
+												   (canvas.w/15)*1.1,
+												   (canvas.h/15)*1.1,
+												   ((canvas.l + canvas.w)/4.2)-((canvas.w/15)*0.05),
+												   (canvas.t + canvas.h)/3.5-((canvas.h/15)*0.05),
+												   function() {
+												   		console.log("Mouse over " + this.name);
+														this.color = 'green';
+														draw();
+												   },
+												   function() {
+												   		console.log("Mouse left " + this.name);
+														this.color = 'blue';
+														draw();
+												   },
+												   null);
+	mouseover_objects.push(bellehaven_mouseover);	
+	// Image
+	var bellehaven_image = new Image();
+	bellehaven_image.src = "images/bellehaven.png";
+	bellehaven_image.onload = function() {
+		var bellehaven_ext = new school_exterior("Belle Haven", 
+													 this,
+													 true, 
+													 canvas.w/15,
+												 	 canvas.h/15, 
+													 (canvas.l + canvas.w)/4.2,
+													 (canvas.t + canvas.h)/3.5,
+													 null,
+													 null,
+													 function() {
+													 	console.log("Clicked " + this.name);
+														deactivate_objs();
+														activate_interior(this, 0);
+														draw();
+													 });
+		for (var i=1; i<3; i++) {
+			var bellehaven_int_img = new Image();
+			bellehaven_int_img.src = "images/bellehaven" + i + ".png";
+			aspect_ratio = Math.min((canvas.w / bellehaven_int_img.width), (canvas.h / bellehaven_int_img.height));
+			bellehaven_ext.interiors.push(new school_interior("Belle Haven Interior " + i,
+																   i-1,
+																   bellehaven_ext,
+																   bellehaven_int_img,
+																   false,
+																   bellehaven_int_img.width * aspect_ratio,
+																   bellehaven_int_img.height * aspect_ratio,
+																   ((canvas.l + canvas.w)/2) - ((bellehaven_int_img.width * aspect_ratio)/2),
+																   0,
+																   null,
+																   null,
+																   function() {
+																   		deactivate_objs();
+																		activate_interior(this.parent, (this.index + 1));
+																		draw();
+																   }));
+		}
+	
+		add_element_to_school_ext_objects(bellehaven_ext);
+	} 
+
+	// Cesar Chavez 
+	// Mouseover obj
+	var cesarchavez_mouseover = new mouseover_object("Cesar Chavez",
+												   'blue',
+												   true,
+												   (canvas.w/15)*1.1,
+												   (canvas.h/15)*1.1,
+												   ((canvas.l + canvas.w)/2.22)-((canvas.w/15)*0.05),
+												   (canvas.t + canvas.h)/2.3-((canvas.h/15)*0.05),
+												   function() {
+												   		console.log("Mouse over " + this.name);
+														this.color = 'green';
+														draw();
+												   },
+												   function() {
+												   		console.log("Mouse left " + this.name);
+														this.color = 'blue';
+														draw();
+												   },
+												   null);
+	mouseover_objects.push(cesarchavez_mouseover);	
+	// Image	
+	var cesarchavez_image = new Image();
+	cesarchavez_image.src = "images/cesarchavez.png";
+	cesarchavez_image.onload = function() {
+		var cesarchavez_ext = new school_exterior("Cesar Chavez", 
+													 this,
+													 true, 
+													 canvas.w/15,
+												 	 canvas.h/15, 
+													 (canvas.l + canvas.w)/2.22,
+													 (canvas.t + canvas.h)/2.3,
+													 null,
+													 null,
+													 function() {
+													 	console.log("Clicked " + this.name);
+														deactivate_objs();
+														activate_interior(this, 0);
+														draw();
+													 });
+		// Add interior image objs
+		for (var i=1; i<4; i++) {
+			var cesarchavez_int_img = new Image();
+			cesarchavez_int_img.src = "images/cesarchavez" + i + ".png";
+			aspect_ratio = Math.min((canvas.w / cesarchavez_int_img.width), (canvas.h / cesarchavez_int_img.height));
+			cesarchavez_ext.interiors.push(new school_interior("Cesar Chavez Interior " + i,
+																   i-1,
+																   cesarchavez_ext,
+																   cesarchavez_int_img,
+																   false,
+																   cesarchavez_int_img.width * aspect_ratio,
+																   cesarchavez_int_img.height * aspect_ratio,
+																   ((canvas.l + canvas.w)/2) - ((cesarchavez_int_img.width * aspect_ratio)/2),
+																   0,
+																   null,
+																   null,
+																   function() {
+																   	console.log("Clicked on CC interior");
+																   		deactivate_objs();
+																		activate_interior(this.parent, (this.index + 1));
+																		draw();
+																   }));
+		}
+		
+		add_element_to_school_ext_objects(cesarchavez_ext);
+	} 
+
+	// Costano	 
+	// Mouseover obj
+	var costano_mouseover = new mouseover_object("Costano",
+												   'blue',
+												   true,
+									 			   (canvas.w/15)*1.1,
+												   (canvas.h/15)*1.1,
+												   ((canvas.l + canvas.w)/1.8)-((canvas.w/15)*0.05),
+												   (canvas.t + canvas.h)/3.6-((canvas.h/15)*0.05),
+												   function() {
+												   		console.log("Mouse over " + this.name);
+														this.color = 'green';
+														draw();
+												   },
+												   function() {
+												   		console.log("Mouse left " + this.name);
+														this.color = 'blue';
+														draw();
+												   },
+												   null);
+	mouseover_objects.push(costano_mouseover);	
+	// Image
+	var costano_image = new Image();
+	costano_image.src = "images/costano.png";
+	costano_image.onload = function() {
+		var costano_ext = new school_exterior("Costano", 
+													 this,
+													 true, 
+													 canvas.w/15,
+												 	 canvas.h/15, 
+													 (canvas.l + canvas.w)/1.8,
+													 (canvas.t + canvas.h)/3.6,
+													 null,
+													 null,
+													 function() {
+													 	console.log("Clicked " + this.name);
+														deactivate_objs();
+														activate_interior(this, 0);
+														draw();
+													 });
+		// Add interior image objs
+		for (var i=1; i<3; i++) {
+			var costano_int_img = new Image();
+			costano_int_img.src = "images/costano" + i + ".png";
+			aspect_ratio = Math.min((canvas.w / costano_int_img.width), (canvas.h / costano_int_img.height));
+			costano_ext.interiors.push(new school_interior("Costano Interior " + i,
+																   i-1,
+																   costano_ext,
+																   costano_int_img,
+																   false,
+																   costano_int_img.width * aspect_ratio,
+																   costano_int_img.height * aspect_ratio,
+																   ((canvas.l + canvas.w)/2) - ((costano_int_img.width * aspect_ratio)/2),
+																   0,
+																   null,
+																   null,
+																   function() {
+																   		deactivate_objs();
+																		activate_interior(this.parent, (this.index + 1));
+																		draw();
+																   }));
+		}
+		
+		add_element_to_school_ext_objects(costano_ext);
+	} 
+
+	// Los Robles 
+	// Mouseover obj
+	var losrobles_mouseover = new mouseover_object("Los Robles",
+												   'blue',
+												   true,
+												   (canvas.w/15)*1.1,
+												   (canvas.h/15)*1.1,
+												   ((canvas.l + canvas.w)/2.22)-((canvas.w/15)*0.05),
+												   (canvas.t + canvas.h)/2.9-((canvas.h/15)*0.05),
+												   function() {
+												   		console.log("Mouse over " + this.name);
+														this.color = 'green';
+														draw();
+												   },
+												   function() {
+												   		console.log("Mouse left " + this.name);
+														this.color = 'blue';
+														draw();
+												   },
+												   null);
+	mouseover_objects.push(losrobles_mouseover);	
+	// Images	
+	var losrobles_image = new Image();
+	losrobles_image.src = "images/losrobles.png";
+	losrobles_image.onload = function() {
+		var losrobles_ext = new school_exterior("Los Robles", 
+													 this,
+													 true, 
+													 canvas.w/15,
+												 	 canvas.h/15, 
+													 (canvas.l + canvas.w)/2.22,
+													 (canvas.t + canvas.h)/2.9,
+													 null,
+													 null,
+													 function() {
+													 	console.log("Clicked " + this.name);
+														deactivate_objs();
+														activate_interior(this, 0);
+														draw();
+													 });
+		// Add interior image objs
+		for (var i=1; i<3; i++) {
+			var losrobles_int_img = new Image();
+			losrobles_int_img.src = "images/losrobles" + i + ".png";
+			aspect_ratio = Math.min((canvas.w / losrobles_int_img.width), (canvas.h / losrobles_int_img.height));
+			losrobles_ext.interiors.push(new school_interior("Los Robles Interior " + i,
+																   i-1,
+																   losrobles_ext,
+																   losrobles_int_img,
+																   false,
+																   losrobles_int_img.width * aspect_ratio,
+																   losrobles_int_img.height * aspect_ratio,
+																   ((canvas.l + canvas.w)/2) - ((losrobles_int_img.width * aspect_ratio)/2),
+																   0,
+																   null,
+																   null,
+																   function() {
+																   		deactivate_objs();
+																		activate_interior(this.parent, (this.index + 1));
+																		draw();
+																   }));
+		}
+		
+		add_element_to_school_ext_objects(losrobles_ext);
+	} 
+
+	// McNair	 
+	// Mouseover obj
+	var mcnair_mouseover = new mouseover_object("McNair",
+												   'blue',
+												   true,
+												   (canvas.w/15)*1.1,
+												   (canvas.h/15)*1.1,
+												   ((canvas.l + canvas.w)/1.62)-((canvas.w/15)*0.05),
+												   (canvas.t + canvas.h)/1.512-((canvas.h/15)*0.05),
+												   function() {
+												   		console.log("Mouse over " + this.name);
+														this.color = 'green';
+														draw();
+												   },
+												   function() {
+												   		console.log("Mouse left " + this.name);
+														this.color = 'blue';
+														draw();
+												   },
+												   null);
+	mouseover_objects.push(mcnair_mouseover);	
+	// Image
+	var mcnair_image = new Image();
+	mcnair_image.src = "images/mcnair.png";
+	mcnair_image.onload = function() {
+		var mcnair_ext = new school_exterior("McNair", 
+													 this, 
+													 true,
+													 canvas.w/15,
+												 	 canvas.h/15, 
+													 (canvas.l + canvas.w)/1.62,
+													 (canvas.t + canvas.h)/1.512,
+													 null,
+													 null,
+													 function() {
+													 	console.log("Clicked " + this.name);
+														deactivate_objs();
+														activate_interior(this, 0);
+														draw();
+													 });
+		// Add interior image objs
+		for (var i=1; i<2; i++) {
+			var mcnair_int_img = new Image();
+			mcnair_int_img.src = "images/mcnair" + i + ".png";
+			aspect_ratio = Math.min((canvas.w / mcnair_int_img.width), (canvas.h / mcnair_int_img.height));
+			mcnair_ext.interiors.push(new school_interior("McNair Interior " + i,
+																   i-1,
+																   mcnair_ext,
+																   mcnair_int_img,
+																   false,
+																   mcnair_int_img.width * aspect_ratio,
+																   mcnair_int_img.height * aspect_ratio,
+																   ((canvas.l + canvas.w)/2) - ((mcnair_int_img.width * aspect_ratio)/2),
+																   0,
+																   null,
+																   null,
+																   function() {
+																   		deactivate_objs();
+																		activate_interior(this.parent, (this.index + 1));
+																		draw();
+																   }));
+		}
+		
+		add_element_to_school_ext_objects(mcnair_ext);
+	} 
+
+	// Willow Oaks 
+	// Mouseover obj
+	var willowoaks_mouseover = new mouseover_object("Willow Oaks",
+												   'blue',
+												   true,
+												   (canvas.w/15)*1.1,
+												   (canvas.h/15)*1.1,
+												   ((canvas.l + canvas.w)/3.5)-((canvas.w/15)*0.05),
+												   (canvas.t + canvas.h)/1.3-((canvas.h/15)*0.05),
+												   function() {
+												   		console.log("Mouse over " + this.name);
+														this.color = 'green';
+														draw();
+												   },
+												   function() {
+												   		console.log("Mouse left " + this.name);
+														this.color = 'blue';
+														draw();
+												   },
+												   null);
+	mouseover_objects.push(willowoaks_mouseover);	
+	// Image
+	var willowoaks_image = new Image();
+	willowoaks_image.src = "images/willowoaks.png";
+	willowoaks_image.onload = function() {
+		var willowoaks_ext = new school_exterior("Willow Oaks", 
+													 this, 
+													 true,
+													 canvas.w/15,
+												 	 canvas.h/15, 
+													 (canvas.l + canvas.w)/3.5,
+													 (canvas.t + canvas.h)/1.3,
+													 null,
+													 null,
+													 function() {
+													 	console.log("Clicked " + this.name);
+														deactivate_objs();
+														activate_interior(this, 0);
+														draw();
+													 });
+		// Add interior image objs
+		for (var i=1; i<2; i++) {
+			var willowoaks_int_img = new Image();
+			willowoaks_int_img.src = "images/willowoaks" + i + ".png";
+			aspect_ratio = Math.min((canvas.w / willowoaks_int_img.width), (canvas.h / willowoaks_int_img.height));
+			willowoaks_ext.interiors.push(new school_interior("Willow Oaks Interior " + i,
+																   i-1,
+																   willowoaks_ext,
+																   willowoaks_int_img,
+																   false,
+																   willowoaks_int_img.width * aspect_ratio,
+																   willowoaks_int_img.height * aspect_ratio,
+																   ((canvas.l + canvas.w)/2) - ((willowoaks_int_img.width * aspect_ratio)/2),
+																   0,
+																   null,
+																   null,
+																   function() {
+																   		deactivate_objs();
+																		activate_interior(this.parent, (this.index + 1));
+																		draw();
+																   }));
+		}
+		
+		add_element_to_school_ext_objects(willowoaks_ext);
+	}
+
+	// District Office 
+	// Mouseover obj
+	var districtoffice_mouseover = new mouseover_object("District Office",
+												   'blue',
+												   true,
+												   (canvas.w/15)*1.1,
+												   (canvas.h/15)*1.1,
+												   ((canvas.l + canvas.w)/2.35)-((canvas.w/15)*0.05),
+												   (canvas.t + canvas.h)/1.5-((canvas.h/15)*0.05),
+												   function() {
+												   		console.log("Mouse over " + this.name);
+														this.color = 'green';
+														draw();
+												   },
+												   function() {
+												   		console.log("Mouse left " + this.name);
+														this.color = 'blue';
+														draw();
+												   },
+												   null);
+	mouseover_objects.push(districtoffice_mouseover);	
+	// Image
+	var districtoffice_image = new Image();
+	districtoffice_image.src = "images/districtoffice.png";
+	districtoffice_image.onload = function() {
+		var districtoffice_ext = new school_exterior("District Office", 
+													 this, 
+													 true,
+													 canvas.w/15,
+												 	 canvas.h/15, 
+													 (canvas.l + canvas.w)/2.35,
+													 (canvas.t + canvas.h)/1.5,
+													 null,
+													 null,
+													 function() {
+													 	console.log("Clicked " + this.name);
+														deactivate_objs();
+														activate_interior(this, 0);
+														draw();
+													 });
+		// Add interior image objs
+		for (var i=1; i<18; i++) {
+			var districtoffice_int_img = new Image();
+			districtoffice_int_img.src = "images/districtoffice" + i + ".png";
+			var aspect_ratio = Math.min((canvas.w / districtoffice_int_img.width), (canvas.h / districtoffice_int_img.height));
+			districtoffice_ext.interiors.push(new school_interior("District Office Interior " + i,
+																   i-1,
+																   districtoffice_ext,
+																   districtoffice_int_img,
+																   false,
+																   districtoffice_int_img.width * aspect_ratio,
+																   districtoffice_int_img.height * aspect_ratio,
+																   ((canvas.l + canvas.w)/2) - ((districtoffice_int_img.width * aspect_ratio)/2),
+																   0,
+																   null,
+																   null,
+																   function() {
+																   		deactivate_objs();
+																		activate_interior(this.parent, (this.index + 1));
+																		draw();
+																   }));
+		}
+		
+		add_element_to_school_ext_objects(districtoffice_ext);
+	}
+}
+
+function run() {
+	draw();
+	//setInterval(draw, 1000/fps);
+}
+
+function draw() {
+	draw_background(canvas);
+	draw_mouseover_objects(canvas, mouseover_objects);
+	draw_school_exteriors(canvas, school_exteriors);
+	draw_school_interiors(canvas, school_exteriors);
+}
+
+function add_element_to_school_ext_objects(element) {
+	school_exteriors.push(element);
+	if (school_exteriors.length == 7) {
+		run();
+	}
+}
+
+function canvas_data() {
+	this.canvas = document.getElementById("canvas");
+	this.context = this.canvas.getContext("2d");
+	this.l = this.canvas.offsetLeft;
+	this.t = this.canvas.offsetTop;
+	this.w = this.canvas.width;
+	this.h = this.canvas.height;
+	this.update_size = function(width, height) {
+		this.canvas.width = width;
+		this.canvas.height = height;
+		this.w = width;
+		this.h = height;
+		this.l = this.canvas.offsetLeft;
+		this.t = this.canvas.offsetTop;
+	};
+}
+
+function obj(name, active, w, h, l, t, on_mouseover, on_mouseleave, on_click) {
+	this.name = name;
+	this.active = active;
+	this.w = w;
+	this.h = h;
+	this.l = l;
+	this.t = t;
+	this.r = this.l + this.w;
+	this.b = this.t + this.h;
+	this.on_mouseover = on_mouseover;
+	this.on_mouseleave = on_mouseleave;
+	this.on_click = on_click;
+}
+
+function mouseover_object(name, color, active, w, h, l, t, on_mouseover, on_mouseleave, on_click) {
+	var ret = new obj(name, active, w, h, l, t, on_mouseover, on_mouseleave, on_click);
+	ret.color = color;
+	return ret;
+}
+
+function school_exterior(name, image, active, w, h, l, t, on_mouseover, on_mouseleave, on_click) {
+	var ret = new obj(name, active, w, h, l, t, on_mouseover, on_mouseleave, on_click);
+	ret.image = image;	
+	ret.interiors = [];
+	return ret;
+}
+
+function school_interior(name, index, parent, image, active, w, h, l, t, on_mouseover, on_mouseleave, on_click) {
+	var ret = new obj(name, active, w, h, l, t, on_mouseover, on_mouseleave, on_click);
+	ret.image = image;
+	ret.index = index;
+	ret.parent = parent;
+	return ret;
+}
+
+function reset() {
+	mouseover_objects.forEach(function(element) {
+		element.active = true;
+	});
+
+	school_exteriors.forEach(function(element) {
+		element.interiors.forEach(function(element) {
+			element.active = false;
+		});	
+		element.active = true;
+	});
+}
+
+function deactivate_objs() {
+	mouseover_objects.forEach(function(element) {
+		element.active = false;
+	});
+
+	school_exteriors.forEach(function(element) {
+		element.interiors.forEach(function(element) {
+			element.active = false;
+		});	
+		element.active = false;
+	});
+}
+
+function activate_interior(school_exterior_obj, index) {
+	if (index >= school_exterior_obj.interiors.length) {
+		reset();
+	}
+	else {
+		console.log(school_exterior_obj.interiors[index]);
+		school_exterior_obj.interiors[index].active = true;
+		console.log(school_exterior_obj.interiors[index]);
+	}
+}
+
+function draw_background(canvas) {
+	canvas.context.rect(0, 0, canvas.w, canvas.h);
+	canvas.context.fillStyle = "black";
+	canvas.context.fill();
+	canvas.context.drawImage(background, 0, 0, canvas.w, canvas.h);
+}
+
+function draw_mouseover_objects(canvas, mouseover_objects) {
+	mouseover_objects.forEach(function(element) {
+		if (element.active === true) {	
+			canvas.context.fillStyle = element.color;	
+			canvas.context.fillRect(element.l, element.t, element.w, element.h);
+		}	
+	});
+}
+
+function draw_school_exteriors(canvas, school_exteriors) {
+	school_exteriors.forEach(function(element) {
+		if (element.active === true) { 
+			canvas.context.drawImage(element.image, element.l, element.t, element.w, element.h);	
+		}
+	});
+}
+
+function draw_school_interiors(canvas, school_exteriors) {
+	school_exteriors.forEach(function(element) {
+		element.interiors.forEach(function(element) {
+			if (element.active === true) {
+				canvas.context.drawImage(element.image, element.l, element.t, element.w, element.h);	
+			}		
+		});
+	});
+}
+
+</script>
+
+</body>
+</html>
